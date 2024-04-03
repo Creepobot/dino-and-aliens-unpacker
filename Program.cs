@@ -20,12 +20,13 @@ namespace DinoAndAliensUnpacker
         {
             do
             {
-                Console.Write("Использовать Xor шифрование? (Рекомендуется по умолчанию) [Д/Н]. Use Xor encryption? (Recommended by default) [Y/N]: ");
+                Console.Write("Использовать Xor шифрование? (Рекомендуется по умолчанию) [Д/н].\nUse Xor encryption? (Recommended by default) [Y/n]: ");
                 var key = Console.ReadLine();
                 switch (key?.ToLower())
                 {
                     case "д":
                     case "y":
+                    case "":
                         return true;
                     case "н":
                     case "n":
