@@ -8,12 +8,33 @@ namespace DinoAndAliensUnpacker
 {
     internal static class Program
     {
-        static int Fail(string message)
+        private static int Fail(string message)
         {
             Console.WriteLine(message);
             Console.WriteLine("Нажмите любую клавишу чтобы выйти... Press any key to exit...");
             Console.ReadKey();
             return 1;
+        }
+
+        private static bool XorToggle()
+        {
+            do
+            {
+                Console.Write("Использовать Xor шифрование? (Рекомендуется по умолчанию) [Д/Н]. Use Xor encryption? (Recommended by default) [Y/N]: ");
+                var key = Console.ReadLine();
+                switch (key?.ToLower())
+                {
+                    case "д":
+                    case "y":
+                        return true;
+                    case "н":
+                    case "n":
+                        return false;
+                    default:
+                        Console.WriteLine("Неправильный аргумент. Выберите между Д и Н. Invalid argument. Choose between Y and N");
+                        break;
+                }
+            } while (true);
         }
 
         private static void Xor(IList<byte> data, string key)
@@ -34,6 +55,8 @@ namespace DinoAndAliensUnpacker
             {
                 var basePath = Path.Combine(Path.GetDirectoryName(args[0]) ?? ".", Path.GetFileNameWithoutExtension(args[0]));
 
+                var xor = XorToggle();
+                
                 using (var file = File.OpenRead(args[0]))
                 using (var reader = new BinaryReader(file))
                 {
@@ -48,8 +71,10 @@ namespace DinoAndAliensUnpacker
                         var directory = Path.GetDirectoryName(path);
                         if (directory != null) Directory.CreateDirectory(directory);
                         
-                        Console.WriteLine($"Unpacking {name}...");
-                        Xor(data, name);
+                        Console.WriteLine($"Распаковка {name}... Unpacking {name}...");
+                        
+                        if (xor)
+                            Xor(data, name);
                         File.WriteAllBytes(path, data);
                     }
                 }
@@ -59,6 +84,8 @@ namespace DinoAndAliensUnpacker
                 var files = Directory.EnumerateFiles(args[0], "*.*", SearchOption.TopDirectoryOnly).ToArray();
                 var datFile = Path.Combine(Path.GetDirectoryName(args[0]) ?? ".", Path.GetFileName(args[0]) + ".dat");
                 if (File.Exists(datFile)) File.Delete(datFile);
+                
+                var xor = XorToggle();
 
                 using (var stream = File.OpenWrite(datFile))
                 using (var writer = new BinaryWriter(stream))
@@ -68,10 +95,11 @@ namespace DinoAndAliensUnpacker
                         var name = Path.GetFileName(file);
                         var data = File.ReadAllBytes(file);
                         var len = data.Length;
+                        
+                        if (xor)
+                            Xor(data, name);
 
-                        Xor(data, name);
-
-                        Console.WriteLine($"Packing {name}...");
+                        Console.WriteLine($"Запаковка {name}... Packing {name}...");
                         writer.Write(Encoding.UTF8.GetBytes(name));
                         writer.Write('\0');
                         writer.Write(len);
@@ -81,7 +109,7 @@ namespace DinoAndAliensUnpacker
             }
             else
             {
-                return Fail("Файл не найден\nFile not found");
+                return Fail("Файл не найден. File not found.");
             }
 
             Console.WriteLine("Готово! Done!");
